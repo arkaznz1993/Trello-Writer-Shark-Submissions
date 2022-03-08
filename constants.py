@@ -1,7 +1,7 @@
 import os
 
 GOOGLE_DOC_LINK = 'https://docs.google.com/document/d/[DOC_ID]/edit'
-
+USER_EMAIL = 'editor@writershark.com'
 
 API_KEY = os.environ.get("TRELLO_API_KEY")
 AUTH_TOKEN = os.environ.get("TRELLO_TOKEN")
