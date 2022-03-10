@@ -22,9 +22,9 @@ def google_service(service_type):
     # The file token.json stores the user's access and refresh tokens, and is
     # created automatically when the authorization flow completes for the first
     # time.
-    if os.path.exists(os.environ.get('TRELLO_WRITER_SHARK_CLIENT_SECRET')):
+    if os.path.exists(os.environ.get('GOOGLE_APPLICATION_CREDENTIALS')):
         creds = service_account.Credentials.from_service_account_file(
-            os.environ.get('TRELLO_WRITER_SHARK_CLIENT_SECRET'), scopes=constants.SCOPES)
+            os.environ.get('GOOGLE_APPLICATION_CREDENTIALS'), scopes=constants.SCOPES)
         delegated_credentials = creds.with_subject(constants.USER_EMAIL)
 
     if service_type == constants.SHEETS:
