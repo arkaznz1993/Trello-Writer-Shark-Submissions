@@ -1,5 +1,5 @@
 from datetime import datetime
-
+from pytz import timezone
 import constants
 from google_service import google_service
 from spreadsheets import Sheet
@@ -21,4 +21,4 @@ def is_holiday(date, holidays_list):
     return False
 
 
-holiday = is_holiday(datetime.now(), get_holidays)
+holiday = is_holiday(datetime.now(timezone('Asia/Kolkata')), get_holidays)

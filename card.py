@@ -7,6 +7,7 @@ from custom_field_options import CustomFieldOption
 from docs import Docs
 from google_service import get_id_from_url
 from proofreader import Proofreader
+from database import database_connection
 
 URL = "https://api.trello.com/1/cards"
 STATUS_COMPLETED = 2
@@ -25,6 +26,7 @@ class Card:
         self.id_board = id_board
         self.desc = desc
         self.client = None
+        self.penalty = 0
         self.proofreader = None
         self.proofreader_name = None
         self.word_count = None
@@ -44,13 +46,6 @@ class Card:
         self.remarks = 'None'
 
         try:
-            if self.id_board == constants.BOARD_ID_EDITOR_ALPHA:
-                print('Team Alpha')
-            elif self.id_board == constants.BOARD_ID_EDITOR_BETA:
-                print('Team Beta')
-            elif self.id_board == constants.BOARD_ID_EDITOR_GAMMA:
-                print('Team Gamma')
-
             self.set_card_proofreader()
             self.set_card_custom_fields()
             self.compute_score()
@@ -72,8 +67,11 @@ class Card:
                 self.doc_file_copy2 = self.doc_file_original
 
             Card.all_cards.append(self)
-        except:
-            pass
+        except Exception as e:
+            print(e)
+
+    def __repr__(self):
+        return f"Card('{self.id}', '{self.title}', '{self.url}', '{self.id_list}', '{self.id_board}', '{self.desc}')"
 
     @staticmethod
     def instantiate_from_json(cards_json):
@@ -140,17 +138,6 @@ class Card:
                     cfo = CustomFieldOption.get_custom_field_option_by_id(custom_field_json['idValue'])
                     self.instructions_followed = cfo.field_value
 
-    def compute_score(self):
-        self.deduct_for_each_error()
-
-        if self.instructions_followed == 'Yes':
-            self.score += 20
-
-        if round(self.total_errors_per_500_words) > 5:
-            print('TERRIBLEEEEE')
-
-        print(f'FINAL SCORE: {self.score}')
-
     def deduct_for_each_error(self):
         errors = [self.grammatical_errors, self.formatting_errors, self.continuity_errors, self.misc_errors]
 
@@ -166,6 +153,19 @@ class Card:
                 self.score -= 4
             elif error_per_500_words == 1:
                 self.score -= 2
+
+    def compute_score(self):
+        self.deduct_for_each_error()
+
+        if self.instructions_followed == 'Yes':
+            self.score += 20
+
+        if round(self.total_errors_per_500_words) > 5:
+            word_count = database_connection.get_word_count([self.id])[0]
+            self.penalty = int(0.25 * word_count)
+            print(self.penalty)
+
+        print(f'FINAL SCORE: {self.score}')
 
     def get_card_doc_link(self):
         actions_url = URL + f'/{self.id}/actions'
@@ -192,7 +192,7 @@ class Card:
             self.doc_file_original = self.surfer_seo
 
     def convert_to_tuple_submissions(self):
-        return tuple([self.proofreader, self.proofreader_name, self.completed_date, self.doc_file_copy2,
+        return tuple([self.penalty, self.proofreader, self.proofreader_name, self.completed_date, self.doc_file_copy2,
                       self.wordcount_proofread, self.grammatical_errors, self.formatting_errors,
                       self.continuity_errors, self.misc_errors, self.score, self.status, self.remarks, self.id])
 

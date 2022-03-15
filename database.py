@@ -14,6 +14,9 @@ config = {
     'ssl_key': os.environ.get('SSL_KEY'),
     'database': os.environ.get('DB_NAME'),
 }
+
+GET_WORDCOUNT = 'SELECT WordCount FROM CardDetails WHERE CardId = %s;'
+
 GET_PROOFREADERS = 'SELECT TrelloId, Name FROM Writers'
 
 GET_CUSTOM_FIELDS = 'SELECT * FROM CustomFields;'
@@ -23,6 +26,7 @@ GET_CUSTOM_FIELD_OPTIONS = 'SELECT CustomFieldOptions.* FROM CustomFieldOptions 
 
 UPDATE_CARD = 'UPDATE CardDetails ' \
               'SET ' \
+              'Penalty = %s,' \
               'Proofreader = %s,' \
               'ProofreaderName = %s,' \
               'CompletedDate = %s,' \
@@ -43,6 +47,10 @@ class DatabaseConnector:
     def __init__(self):
         self.connection = mysql.connector.connect(**config)
         self.cursor = self.connection.cursor()
+
+    def get_word_count(self, id):
+        self.cursor.execute(GET_WORDCOUNT, id)
+        return self.cursor.fetchone()
 
     def get_proofreaders(self):
         self.cursor.execute(GET_PROOFREADERS)
