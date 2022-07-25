@@ -31,14 +31,8 @@ UPDATE_CARD = 'UPDATE CardDetails ' \
               'ProofreaderName = %s,' \
               'CompletedDate = %s,' \
               'FinalDocLink = %s,' \
-              'WordCountProofread = %s,' \
-              'GrammaticalErrors = %s,' \
-              'FormattingErrors = %s,' \
-              'ContinuityErrors = %s,' \
-              'MiscErrors = %s,' \
-              'Score = %s,' \
-              'Status = %s,' \
-              'Remarks = %s ' \
+              'Rating = %s,' \
+              'Status = %s ' \
               'WHERE ' \
               'CardId = %s;'
 

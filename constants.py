@@ -13,6 +13,12 @@ HEADERS = {
     "Accept": "application/json"
 }
 
+RATING_POOR = 'Poor'
+RATING_BAD = 'Bad'
+RATING_AVERAGE = 'Average'
+RATING_GOOD = 'Good'
+RATING_EXCEPTIONAL = 'Exceptional'
+
 MAX_WORD_COUNT_PATTERN = '[0-9]{3,5} words'
 
 SUBMISSION_LIST_IDS = ['619c718bd99d168d8bb7de7b', '61ed0fe6c075f7799d61f308', '6221bec01cf4f2072b5e4001']

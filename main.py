@@ -6,38 +6,36 @@ from card import Card
 from google_service import google_service
 from database import database_connection
 import time
-from holiday import holiday
 from proofreader import Proofreader
 
 
 def main(data, context):
     time_start = time.time()
-    if not holiday:
-        Card.docs_service = google_service(constants.DOCS)
-        Card.drive_service = google_service(constants.DRIVE)
-        Proofreader.instantiate_from_db_list(database_connection.get_proofreaders())
-        CustomField.instantiate_from_list(database_connection.get_custom_fields())
-        CustomFieldOption.instantiate_from_list(database_connection.get_custom_field_options())
 
-        for list_id in constants.SUBMISSION_LIST_IDS:
-            url = f"https://api.trello.com/1/lists/{list_id}/cards"
+    Card.docs_service = google_service(constants.DOCS)
+    Card.drive_service = google_service(constants.DRIVE)
+    Proofreader.instantiate_from_db_list(database_connection.get_proofreaders())
+    CustomField.instantiate_from_list(database_connection.get_custom_fields())
+    CustomFieldOption.instantiate_from_list(database_connection.get_custom_field_options())
 
-            response = requests.request(
-                "GET",
-                url,
-                params=constants.PARAMS,
-                headers=constants.HEADERS
-            )
+    for list_id in constants.SUBMISSION_LIST_IDS:
+        url = f"https://api.trello.com/1/lists/{list_id}/cards"
 
-            Card.instantiate_from_json(response.json())
+        response = requests.request(
+            "GET",
+            url,
+            params=constants.PARAMS,
+            headers=constants.HEADERS
+        )
 
-        database_connection.update_card_details(Card.convert_all_to_db_list())
-        database_connection.connection.close()
+        Card.instantiate_from_json(response.json())
 
-        Card.move_cards_to_limbo()
+    database_connection.update_card_details(Card.convert_all_to_db_list())
+    database_connection.connection.close()
+
+    Card.move_cards_to_limbo()
 
     time_end = time.time()
-
     print(f'Time taken for program: {int(time_end - time_start)} seconds.')
 
 

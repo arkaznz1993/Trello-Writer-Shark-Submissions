@@ -34,21 +34,14 @@ class Card:
         self.doc_file_original = ''
         self.completed_date = None
         self.doc_file_copy2 = None
-        self.wordcount_proofread = 0
-        self.grammatical_errors = 0
-        self.formatting_errors = 0
-        self.continuity_errors = 0
-        self.misc_errors = 0
-        self.total_errors_per_500_words = 0
+        self.rating = None
         self.instructions_followed = 'Yes'
-        self.score = 80
         self.status = STATUS_COMPLETED
-        self.remarks = 'None'
 
         try:
             self.set_card_proofreader()
             self.set_card_custom_fields()
-            self.compute_score()
+            self.compute_penalty()
             self.get_card_doc_link()
 
             if self.doc_file_original.startswith('https://docs.google.com/document/d/'):
@@ -118,54 +111,23 @@ class Card:
         for custom_field_json in response.json():
             c_field = CustomField.get_custom_field_by_id(custom_field_json['idCustomField'])
             if c_field is not None:
-                if c_field.name == 'Grammatical Errors':
-                    self.grammatical_errors = int(custom_field_json['value']['number'])
-                elif c_field.name == 'Formatting Errors':
-                    self.formatting_errors = int(custom_field_json['value']['number'])
-                elif c_field.name == 'Continuity Errors':
-                    self.continuity_errors = int(custom_field_json['value']['number'])
-                elif c_field.name == 'Misc Errors':
-                    self.misc_errors = int(custom_field_json['value']['number'])
-                elif c_field.name == 'Word Count Proofread':
-                    self.wordcount_proofread = int(custom_field_json['value']['number'])
+                if c_field.name == 'Rating':
+                    cfo = CustomFieldOption.get_custom_field_option_by_id(custom_field_json['idValue'])
+                    self.rating = cfo.field_value
                 elif c_field.name == 'Surfer SEO':
                     self.surfer_seo = custom_field_json['value']['text']
                 elif c_field.name == 'Client ID':
                     self.client = custom_field_json['value']['number']
-                elif c_field.name == 'Remarks':
-                    self.remarks = custom_field_json['value']['text']
-                elif c_field.name == 'Instructions Followed':
-                    cfo = CustomFieldOption.get_custom_field_option_by_id(custom_field_json['idValue'])
-                    self.instructions_followed = cfo.field_value
 
-    def deduct_for_each_error(self):
-        errors = [self.grammatical_errors, self.formatting_errors, self.continuity_errors, self.misc_errors]
-
-        for error in errors:
-            error_per_500_words = round((500 / self.wordcount_proofread) * error)
-            self.total_errors_per_500_words += (500 / self.wordcount_proofread) * error
-
-            if error_per_500_words >= 4:
-                self.score -= 16
-            elif error_per_500_words == 3:
-                self.score -= 10
-            elif error_per_500_words == 2:
-                self.score -= 4
-            elif error_per_500_words == 1:
-                self.score -= 2
-
-    def compute_score(self):
-        self.deduct_for_each_error()
-
-        if self.instructions_followed == 'Yes':
-            self.score += 20
-
-        if round(self.total_errors_per_500_words) > 5:
+    def compute_penalty(self):
+        if self.rating == constants.RATING_POOR or self.rating == constants.RATING_BAD:
             word_count = database_connection.get_word_count([self.id])[0]
-            self.penalty = int(0.25 * word_count)
-            print(self.penalty)
+            if self.rating == constants.RATING_BAD:
+                self.penalty = int(0.25 * word_count)
+            else:
+                self.penalty = int(0.5 * word_count)
 
-        print(f'FINAL SCORE: {self.score}')
+            print(f'FINAL PENALTY: {self.penalty}')
 
     def get_card_doc_link(self):
         actions_url = URL + f'/{self.id}/actions'
@@ -193,8 +155,7 @@ class Card:
 
     def convert_to_tuple_submissions(self):
         return tuple([self.penalty, self.proofreader, self.proofreader_name, self.completed_date, self.doc_file_copy2,
-                      self.wordcount_proofread, self.grammatical_errors, self.formatting_errors,
-                      self.continuity_errors, self.misc_errors, self.score, self.status, self.remarks, self.id])
+                      self.rating, self.status, self.id])
 
     @staticmethod
     def convert_all_to_db_list():
