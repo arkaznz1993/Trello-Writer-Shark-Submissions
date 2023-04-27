@@ -34,7 +34,7 @@ class Card:
         self.doc_file_original = ''
         self.completed_date = None
         self.doc_file_copy2 = None
-        self.rating = None
+        self.rating = constants.RATING_AVERAGE
         self.instructions_followed = 'Yes'
         self.status = STATUS_COMPLETED
 
@@ -42,7 +42,7 @@ class Card:
             self.set_card_proofreader()
             self.set_card_custom_fields()
             self.compute_penalty()
-            self.get_card_doc_link()
+            self.set_card_doc_link()
 
             if self.doc_file_original.startswith('https://docs.google.com/document/d/'):
                 doc_id = get_id_from_url(self.doc_file_original)
@@ -116,6 +116,9 @@ class Card:
                     self.rating = cfo.field_value
                 elif c_field.name == 'Surfer SEO':
                     self.surfer_seo = custom_field_json['value']['text']
+                elif c_field.name == 'Doc Link':
+                    self.doc_file_original = custom_field_json['value']['text']
+                    print('SUBMISSION DOC LINK IS: ' + self.doc_file_original)
                 elif c_field.name == 'Client ID':
                     self.client = custom_field_json['value']['number']
 
@@ -129,28 +132,8 @@ class Card:
 
             print(f'FINAL PENALTY: {self.penalty}')
 
-    def get_card_doc_link(self):
-        actions_url = URL + f'/{self.id}/actions'
-        params = constants.PARAMS.copy()
-        params["filter"] = "commentCard"
-        response = requests.request(
-            "GET",
-            actions_url,
-            params=params,
-            headers=constants.HEADERS
-        )
-        doc_link = ''
-        for comment_json in response.json():
-            try:
-                comment_text = comment_json['data']['text']
-                if comment_text.startswith('https://docs.google.com/document/d/'):
-                    doc_link = comment_text
-            except:
-                print('Ran into an error.')
-
-        if len(doc_link) > 0:
-            self.doc_file_original = doc_link
-        else:
+    def set_card_doc_link(self):
+        if len(self.surfer_seo) > 0:
             self.doc_file_original = self.surfer_seo
 
     def convert_to_tuple_submissions(self):
