@@ -118,7 +118,6 @@ class Card:
                     self.surfer_seo = custom_field_json['value']['text']
                 elif c_field.name == 'Doc Link':
                     self.doc_file_original = custom_field_json['value']['text']
-                    print('SUBMISSION DOC LINK IS: ' + self.doc_file_original)
                 elif c_field.name == 'Client ID':
                     self.client = custom_field_json['value']['number']
 
